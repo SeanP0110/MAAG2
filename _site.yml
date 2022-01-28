@@ -1,7 +1,7 @@
 name: "MAAG2"
 title: "My Analytics Art Gallery"
 description: |
-  My Analytics Art Gallery
+  My Analytics Art Gallery 
 output_dir: "_site"
 navbar:
   right:
@@ -9,4 +9,15 @@ navbar:
       href: index.html
     - text: "About"
       href: about.html
+  left:
+    - text: "DataViz Makeovers"
+      menu:
+      - text: "DataViz Makeover 1"
+        href: "DataViz1"
+      - text: "DataViz Makeover 2"
+        href: "DataViz2"
+    - text: "Take-Home Exercises"
+      menu:
+      - text: "Take Home Exercise 1"
+        href: THEx1.html
 output: distill::distill_article

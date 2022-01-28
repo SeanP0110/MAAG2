@@ -1,0 +1,171 @@
+---
+title: "Take Home Exercise 1"
+description: |
+  Here is the take home exercise 1 solution as interpreted by me. The first part of this article looks at a Pareto Diagram describing the returns by item sub-category in a supermarket. The second part of the post portrays Singapore's population pyramid as divided by sex.
+author:
+  - name: Sean Samuel Prajs 
+    url: https://github.com/SeanP0110
+    affiliation: RStudio
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+# Necessary Libraries
+The libraries used for this exercise are going to be tidyverse, readxl, and knitr. They are installed and uploaded using the following chunk of code:
+
+```{r, eval=TRUE, echo=TRUE, results= "hide"}
+packages = c('tidyverse', 'readxl', 'knitr')
+
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+```
+
+# Pareto Diagram
+The Pareto Chart consists of two pieces. A bar chart showing the absolute frequency of returns by category and a line chart showing the proportional cumulative frequency of returns. 
+
+## Data Source
+The file used for this exercise has been provided by the professor and is called: Superstore-2021.xls
+
+### Data Upload and Preparation
+The file has 3 sheets: Orders, Returns, and People. For this exercise we only need Orders and Returns. We upload them to R using the following code:
+
+```{r, eval=TRUE, echo=TRUE}
+orders <- read_xls("data/Superstore-2021.xls", sheet = "Orders")
+returns <- read_xls("data/Superstore-2021.xls", sheet = "Returns")
+```
+
+In order to process the data accurately, we need to join the two sheets. But, what is the common variable we can join them on? Time to look at the table summary for both.
+
+```{r, eval=TRUE, echo=TRUE}
+str(orders)
+str(returns)
+```
+
+Order ID is the common denominator here. Given that we are looking at returns, we should ideally left join returns and orders. This can be done with the following command. 
+
+```{r, eval = TRUE, echo = TRUE}
+join <- left_join(returns, orders, by = c("Order ID" = "Order ID"))
+str(join)
+```
+
+Now that we have both files merged together, it is time to extract the necessary data.
+
+```{r, eval = TRUE, echo = TRUE}
+freq_returned <- join %>% 
+  count(`Sub-Category`) %>%
+  rename(Returns = n)
+# Here the returns per sub-category are counted and then saved within a new tibble (data frame).
+
+freq_sort <- freq_returned %>% arrange(desc(Returns))
+#For the purposes of preparing the graph, we sort the sub-categories by number of returns in descending order.
+
+freq_cum <- freq_sort %>% mutate(CumReturns = cumsum(Returns))
+#Next we use the cumsum function to add a cumulative frequency column.
+
+freq_cum_prop <- freq_cum %>% mutate(
+  PropCumReturns = CumReturns/sum(Returns))
+#Lastly, we add a column for proportional cumulative frequency. This is each cumulative frequency divided by the total number of returns.
+
+```
+
+## Bar Chart
+Now that we are done with the data prep, time for the first viz.
+
+```{r, eval=TRUE, echo=TRUE}
+bar <- freq_cum_prop %>% ggplot(aes(reorder(`Sub-Category`, -Returns), Returns)) + 
+  geom_col(color = "blue", fill = "blue") +
+  labs(title = "No. of Returns ber Sub-Category", x = "Sub-Catgory") +
+  scale_y_continuous(limits= c(0,sum(freq_cum_prop$Returns),100)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+The code for the bar graph is shown above. We use the geon_col method to create a bar chart. Our x variable are the sub-categories ordered from highest to lowest number of returns. The heigh of the bar is determind by Returns. Moreover, the colour is set to blue for both the outline and the fill of the bar. I also added a more coherent x axis title and altered the scale to be adequate for fusion with the line plot. Given the high number of elements within the variable "Sub-Category," I decided to tilt the labels by 90 degrees to avoid overlap. The result is:
+
+```{r, eval=TRUE,echo=FALSE}
+bar
+```
+## Line Plot
+The second element of the Pareto Diagram is the line plot showing the proportional cumulative frequency of the data. This means, that each point represents the sum of the fractions of the total number of returns of each category up to that point (inclusive of the category the point is at).
+
+Now that we are done with the data prep, time for the first viz.
+
+```{r, eval=TRUE, echo=TRUE}
+line <- freq_cum_prop %>% ggplot(aes(
+  reorder(`Sub-Category`, PropCumReturns), PropCumReturns)) +
+  geom_point(shape = 19, size = 1.5) + 
+  geom_path(aes(reorder(`Sub-Category`, PropCumReturns), group = 1)) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(title = "Cumulative Frequency of Returns per Sub-Category", x = "Sub-Category")
+```
+
+For the line plot, the relative cumulative frequency is used on the y-axis. It is plotted in the following way:
+
+1. A scatter plot of the relative cumulative frequencies. This is achieved through `geom_point`. 
+2. We have to draw a line that follows the points. For this, `geom_path` has been used.
+3. `scale_y_continuous` is used to convert the axis into percentage format.
+4. As in the bar chart, the labels of the x-axis are rotated by 90 degrees and the x-axis title and graph title are added.
+
+The final output is this:
+
+```{r, eval=TRUE,echo=FALSE}
+line
+```
+
+## Putting the Graphs Together
+Now that we have the separate elements of the Pareto Chart, we just need to put them together. This can simply happen by adding the two graphs together. However, we need to also add a second y-axis. A handy tool for transforming the y axis is going to be the constant of the total sum of returns, calculated below.
+
+```{r, eval=TRUE, echo=TRUE}
+tot_returns = sum(freq_cum_prop$Returns)
+tot_returns
+```
+
+The code for the Pareto Chart:
+
+```{r, eval=TRUE, echo=TRUE}
+pareto <-
+  freq_cum_prop %>% ggplot(aes(reorder(`Sub-Category`, -Returns), Returns)) + 
+  geom_col(color = "blue", fill = "blue") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  geom_point(aes(reorder(`Sub-Category`, PropCumReturns), PropCumReturns*tot_returns), 
+             shape = 19, size = 1.5) + 
+  geom_path(aes(reorder(`Sub-Category`, PropCumReturns), PropCumReturns*tot_returns, group = 1)) +
+  #in geom_point and geom_path we transform the y values with the reverse transformation with
+  #what we do to the y-axis
+  scale_y_continuous("Absolute Frequency of Returns", sec.axis = 
+                       sec_axis(~.*1/tot_returns, name = "Relative Cumulative Frequency of Returns (%)",
+                                labels = scales::percent_format()),
+                     #the above line of code transforms the first y-axis to create the second
+                     limits= c(0,sum(freq_cum_prop$Returns),100)) +
+  labs(title = "Pareto Chart of Return Frequencies by Sub-Category", x = "Sub-Catgory")
+```
+
+`sec_axis` is used to transform the left y-axis and form a second y-axis on the right. We transform the absolute frequency to the relative cumulative frequency by dividing the values by the total number of returns as saved in `tot_returns`. As mentioned in the code, due to this, we also have to change the y values in the geom_point and geom_path arguments. This is to map the line plot onto the second y axis. In order to achieve this, we just use the reverse transformation of the y-axis. This means we multiply the y values by `tot_returns`.
+
+Finally, we get the following output:
+
+```{r, eval=TRUE, echo=FALSE}
+pareto
+```
+
+What a beautiful graph!
+
+# Age Sex Graph Singapore (Population Pyramid Singapore)
+In the second part of this take home exercise, I will show a visualisation of Singapore's population pyramid.
+
+## Data Source
+The data is taken from <https://www.singstat.gov.sg/>. It is the population data of Singapore from 2021.
+
+## Data Upload and Preparation
+Distill is a publication format for scientific and technical writing, native to the web. 
+
+Learn more about using Distill for R Markdown at <https://rstudio.github.io/distill>.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
