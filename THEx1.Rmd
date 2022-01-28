@@ -164,7 +164,7 @@ Distill is a publication format for scientific and technical writing, native to 
 ## Attempt Summary
 Sadly, I have not managed to complete this diagram in time. I had issues such as an identical count for each age group within the dataset that I could not resolve. Here is my attempted code:
 
-```{r, echo=TRUE, eval=TRUE}
+```{r, echo=TRUE, eval=FALSE}
 data <- read.csv("data/respopagesextod2021.csv")
 str(data)
 

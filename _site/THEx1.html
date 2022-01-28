@@ -93,8 +93,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 
 
   <!--  https://schema.org/Article -->
-  <meta property="article:published" itemprop="datePublished" content="2022-01-28"/>
-  <meta property="article:created" itemprop="dateCreated" content="2022-01-28"/>
+  <meta property="article:published" itemprop="datePublished" content="2022-01-29"/>
+  <meta property="article:created" itemprop="dateCreated" content="2022-01-29"/>
   <meta name="article:author" content="Sean Samuel Prajs"/>
 
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
@@ -113,7 +113,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","output"]}},"value":[{"type":"character","attributes":{},"value":["Take Home Exercise 1"]},{"type":"character","attributes":{},"value":["Here is the take home exercise 1 solution as interpreted by me. The first part of this article looks at a Pareto Diagram describing the returns by item sub-category in a supermarket. The second part of the post portrays Singapore's population pyramid as divided by sex.\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","url","affiliation"]}},"value":[{"type":"character","attributes":{},"value":["Sean Samuel Prajs"]},{"type":"character","attributes":{},"value":["https://github.com/SeanP0110"]},{"type":"character","attributes":{},"value":["RStudio"]}]}]},{"type":"character","attributes":{},"value":["2022-01-28"]},{"type":"character","attributes":{},"value":["distill::distill_article"]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","output"]}},"value":[{"type":"character","attributes":{},"value":["Take Home Exercise 1"]},{"type":"character","attributes":{},"value":["Here is the take home exercise 1 solution as interpreted by me. The first part of this article looks at a Pareto Diagram describing the returns by item sub-category in a supermarket. The second part of the post portrays Singapore's population pyramid as divided by sex.\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","url","affiliation"]}},"value":[{"type":"character","attributes":{},"value":["Sean Samuel Prajs"]},{"type":"character","attributes":{},"value":["https://github.com/SeanP0110"]},{"type":"character","attributes":{},"value":["RStudio"]}]}]},{"type":"character","attributes":{},"value":["2022-01-29"]},{"type":"character","attributes":{},"value":["distill::distill_article"]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -2061,7 +2061,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Take Home Exercise 1","description":"Here is the take home exercise 1 solution as interpreted by me. The first part of this article looks at a Pareto Diagram describing the returns by item sub-category in a supermarket. The second part of the post portrays Singapore's population pyramid as divided by sex.","authors":[{"author":"Sean Samuel Prajs","authorURL":"https://github.com/SeanP0110","affiliation":"RStudio","affiliationURL":"#","orcidID":""}],"publishedDate":"2022-01-28T00:00:00.000+08:00","citationText":"Prajs, 2022"}
+{"title":"Take Home Exercise 1","description":"Here is the take home exercise 1 solution as interpreted by me. The first part of this article looks at a Pareto Diagram describing the returns by item sub-category in a supermarket. The second part of the post portrays Singapore's population pyramid as divided by sex.","authors":[{"author":"Sean Samuel Prajs","authorURL":"https://github.com/SeanP0110","affiliation":"RStudio","affiliationURL":"#","orcidID":""}],"publishedDate":"2022-01-29T00:00:00.000+08:00","citationText":"Prajs, 2022"}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2104,7 +2104,7 @@ DataViz Makeovers
 <div class="d-byline">
   Sean Samuel Prajs <a href="https://github.com/SeanP0110" class="uri">https://github.com/SeanP0110</a> (RStudio)
   
-<br/>2022-01-28
+<br/>2022-01-29
 </div>
 
 <div class="d-article">
@@ -2311,7 +2311,49 @@ DataViz Makeovers
 <h2 id="attempt-summary">Attempt Summary</h2>
 <p>Sadly, I have not managed to complete this diagram in time. I had issues such as an identical count for each age group within the dataset that I could not resolve. Here is my attempted code:</p>
 <div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>data</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span><span class='op'>(</span><span class='st'>"data/respopagesextod2021.csv"</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/str.html'>str</a></span><span class='op'>(</span><span class='va'>data</span><span class='op'>)</span>
 
+<span class='va'>agesex</span> <span class='op'>&lt;-</span> <span class='va'>data</span><span class='op'>[</span> , <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"AG"</span>, <span class='st'>"Sex"</span><span class='op'>)</span><span class='op'>]</span>
+<span class='va'>agesex</span>
+
+<span class='va'>agesex</span> <span class='op'>&lt;-</span> <span class='va'>agesex</span> <span class='op'>%&gt;%</span> <span class='fu'>mutate</span><span class='op'>(</span>Male <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/ifelse.html'>ifelse</a></span><span class='op'>(</span><span class='va'>agesex</span><span class='op'>$</span><span class='va'>Sex</span> <span class='op'>==</span> <span class='st'>'Males'</span>, <span class='fl'>1</span>, <span class='fl'>0</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>agesex</span> <span class='op'>&lt;-</span> <span class='va'>agesex</span> <span class='op'>%&gt;%</span> <span class='fu'>mutate</span><span class='op'>(</span>Female <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/ifelse.html'>ifelse</a></span><span class='op'>(</span><span class='va'>agesex</span><span class='op'>$</span><span class='va'>Sex</span> <span class='op'>==</span> <span class='st'>'Females'</span>, <span class='fl'>1</span>, <span class='fl'>0</span><span class='op'>)</span><span class='op'>)</span>
+
+<span class='va'>agesex</span>
+
+<span class='va'>agesex_grouped</span> <span class='op'>&lt;-</span> <span class='va'>agesex</span> <span class='op'>%&gt;%</span> <span class='fu'>group_by</span><span class='op'>(</span><span class='va'>AG</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='fu'>summarise</span><span class='op'>(</span>
+  <span class='st'>"Total Male"</span> <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span><span class='op'>(</span><span class='va'>Male</span><span class='op'>)</span>, <span class='st'>"Total Female"</span> <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span><span class='op'>(</span><span class='va'>Female</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'>ungroup</span><span class='op'>(</span><span class='op'>)</span>
+
+<span class='va'>agesex_grouped</span>
+
+<span class='va'>plot</span> <span class='op'>&lt;-</span> <span class='va'>agesex_grouped</span> <span class='op'>%&gt;%</span> <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>AG</span>, y <span class='op'>=</span> <span class='va'>Male</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'>geom_bar</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>AG</span>, y <span class='op'>=</span> <span class='va'>agesex_grouped</span><span class='op'>$</span><span class='va'>Male</span>, colour<span class='op'>=</span><span class='st'>"Blue"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'>geom_bar</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>AG</span>, y <span class='op'>=</span> <span class='va'>agesex_grouped</span><span class='op'>$</span><span class='va'>Female</span>, colour<span class='op'>=</span><span class='st'>"Red"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'>scale_y_continuous</span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='op'>-</span><span class='fl'>3000</span>, <span class='fl'>3000</span>, <span class='fl'>500</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span> 
+  <span class='fu'>coord_flip</span><span class='op'>(</span><span class='op'>)</span>
+
+<span class='va'>plot</span>
+
+<span class='va'>aeg</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/table.html'>table</a></span><span class='op'>(</span><span class='va'>agesex</span><span class='op'>$</span><span class='va'>AG</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>aeg</span>
+
+<span class='va'>x</span> <span class='op'>&lt;-</span> <span class='va'>agesex</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span><span class='op'>(</span><span class='va'>AG</span><span class='op'>==</span><span class='st'>"0_to_4"</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span>
+
+<span class='va'>plot</span> <span class='op'>&lt;-</span> <span class='va'>agesex</span> <span class='op'>%&gt;%</span> <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>AG</span>, fill<span class='op'>=</span><span class='va'>Sex</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span> 
+  <span class='fu'>geom_bar</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span><span class='op'>(</span><span class='va'>agesex</span>,<span class='va'>Sex</span><span class='op'>==</span><span class='st'>"Females"</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'>geom_bar</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>agesex</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span><span class='op'>(</span><span class='va'>Sex</span><span class='op'>==</span><span class='st'>"Males"</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'>coord_flip</span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>plot</span>
+
+<span class='va'>plot</span> <span class='op'>&lt;-</span> <span class='va'>agesex</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://rdrr.io/r/base/subset.html'>subset</a></span><span class='op'>(</span>Sex<span class='op'>=</span><span class='st'>"Females"</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>AG</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span> 
+  <span class='fu'>geom_bar</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'>coord_flip</span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>plot</span>
+</code></pre>
+</div>
 </div>
 <h3 id="distill">Distill</h3>
 <p>Learn more about using Distill for R Markdown at <a href="https://rstudio.github.io/distill" class="uri">https://rstudio.github.io/distill</a>.</p>
