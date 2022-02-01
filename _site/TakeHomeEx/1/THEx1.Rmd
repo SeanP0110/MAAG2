@@ -6,7 +6,24 @@ author:
   - name: Sean Samuel Prajs 
     url: https://github.com/SeanP0110
     affiliation: RStudio
-date: "`r Sys.Date()`"
+date: "2022/01/28"
+navbar:
+  right:
+    - text: "Home"
+      href: index.html
+    - text: "About"
+      href: about.html
+  left:
+    - text: "DataViz Makeovers"
+      menu:
+      - text: "DataViz Makeover 1"
+        href: "DataViz1"
+      - text: "DataViz Makeover 2"
+        href: "DataViz2"
+    - text: "Take-Home Exercise"
+      menu:
+      - text: "THE1"
+        href: "TakeHomeEx/1/THEx1.html"
 output: distill::distill_article
 ---
 # Necessary Libraries
