@@ -1,0 +1,572 @@
+---
+title: "Take Home Exercise 2"
+description: |
+  This week in class we learned about interactive data visualisations using
+  different R libraries including 'ggiraph', 'plotly', and 'gganimate'.
+author:
+  - name: Sean Samuel Prajs
+    url: https://github.com/SeanP0110
+    affiliation: SMU
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+# Objective
+
+While static graphs can offer a lot of insights, interactive graphs offer the user more options to explore graphs. In this week's Take Home Exercise, we explore Singapore's Age structure by gender and planning area.
+
+# Necessary Libraries
+
+First, we should refer to which libraries are needed for this exercise. The necessary packagaes and their uses are listed below:
+
+1. [ggiraph](https://cran.r-project.org/web/packages/ggiraph/index.html): interactive graphing library for ggplot2
+2. [plotly](https://plotly.com/r/): alternative for creating interactive graphs
+3. [gganimate](https://gganimate.com/): library for animating ggplot2 graphs
+4. [patchwork](https://cran.r-project.org/web/packages/patchwork/index.html): for creating multiplot graphs
+5. [DT](https://cran.r-project.org/web/packages/DT/index.html): for interactive tables
+6. [tidyverse](https://www.tidyverse.org/): general data processing
+7. [gifski](https://cran.r-project.org/web/packages/gifski/index.html): used with gganimate to create gifs
+8. [ggplot2](https://ggplot2.tidyverse.org/): graphing library
+9. [plyr](https://www.rdocumentation.org/packages/plyr/versions/1.8.6): loaded to use rounding function `round_any``
+
+We load all of the packages using Professor Kam's code:
+
+```{r, eval = TRUE, echo = TRUE, results='hide'}
+packages = c('ggiraph', 'plotly', 'gganimate', 
+             'patchwork', 'DT', 'tidyverse', 'gifski',
+             'plyr')
+
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+```
+
+
+# Simple Graph
+
+When visualising data while taking many variables into perspective, it is always useful to build a simple base graph on which we can expand. For this graph, we will only consider one year and will not look into Planning Areas yet.
+
+## Data Preparation
+
+### Data Upload and Exploration
+
+Let us start with data exploration. The code for uploading the data is seen below.
+
+```{r, eval=TRUE, echo=TRUE}
+twotwoten <- read.csv("data/respopagesextod2000to2010/respopagesextod2000to2010.csv")
+twoeltwotw <- read.csv("data/respopagesextod2011to2020/respopagesextod2011to2020.csv")
+
+datalist <- list(twotwoten, twoeltwotw) #list of the two data tables
+```
+
+The two files used in this visualisation are:
+
+1.  Singapore Residents by Planning Area / Subzone, Age Group, Sex and Type of Dwelling, June 2000-2010
+2.  Singapore Residents by Planning Area / Subzone, Age Group, Sex and Type of Dwelling, June 2012-2010
+
+The data is taken from official Singapore government statistics. The files can be found [here](https://www.singstat.gov.sg/find-data/search-by-theme/population/geographic-distribution/latest-data). 
+
+Now, let's see what the data looks like:
+
+```{r, eval=TRUE, echo=FALSE}
+for (d in datalist){
+  print("__ Summary __")
+  print(str(d))
+  print("__ Head __")
+  print(head(d))
+}
+```
+
+As we can see here, the tables are identical except for the time period. Therefore, it is possible to combine them into one large data frame:
+
+```{r, eval=TRUE, echo=TRUE}
+data <- rbind(twotwoten, twoeltwotw)
+str(data)
+```
+
+Looking at the variables, it becomes clear that we can drop all of them except Age Group (AG), Gender (Sex), Population (Pop), and Year (Time). Moreover, given that we are trying to build an Age-Sex Pyramid, we need to group the data. The function is referenced from [here](https://statisticsglobe.com/group-data-frame-by-multiple-columns-in-r).
+
+```{r, eval=TRUE, echo=TRUE}
+data_graph <- data[ ,c("AG","Sex","Pop","Time")]
+
+data_grouped <- data_graph %>%
+  group_by(AG, Sex, Time) %>% 
+  dplyr::summarise(Pop = sum(Pop))
+```
+ 
+ We get following tibble:
+ 
+```{r, echo=FALSE, eval = TRUE}
+ print(data_grouped, n=40)
+```
+
+## Graph
+
+For the first graph, we will focus only on the year 2000. We will use ggplot to build it.
+
+```{r, echo=TRUE, eval=FALSE}
+plot <- data_grouped %>% ggplot(aes(x=AG, y = Pop, fill = Sex)) +
+  geom_col(data = data_grouped %>% filter(Sex=="Females", Time == 2000),
+           fill = "pink") + 
+  geom_col(data = data_grouped %>% filter(Sex=="Males", Time == 2000), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  scale_y_continuous(name = "Population (in 000's)", 
+                     breaks = y_breaks,
+                     labels = y_labels) +
+  labs(title = "Age Sex Pyramid Singapore", x = "Age Group") +
+  coord_flip() + 
+  theme_light() +
+  theme(plot.title = element_text(hjust=0.5))
+
+```
+
+The code first references the data. We set population on the y-axis and Age on the x-axis. The difference between male and female is going to be shown by Gender (Sex).
+
+Then we draw the bar graph for women and men separately using `geom_col`. As can be seen, for both of them the data is filtered to the year 2000 and their respective gender. 
+
+For the male plot, an aesthetic is added that makes its values negative. This is necessary to let the bars rise in the opposite direction of the female plot. To find out more about this click [here](https://stackoverflow.com/questions/14680075/simpler-population-pyramid-in-ggplot2).
+
+Next, the axis names are set with `scale_y_continuous` and `labs`.
+
+Breaks and labels for the y-axis are also set. How these are determined is shown below.
+
+Lastly, the coordinates are flipped (as we want horizontal bars) with [`coord_flip()`](https://www.datanovia.com/en/blog/how-to-create-a-ggplot-horizontal-bar-chart/) and the layout is set using `theme_light` and `theme`. Reference for the themes can be found [here](https://www.datanovia.com/en/blog/ggplot-themes-gallery/#use-themes-in-ggplot2).
+
+```{r, echo=TRUE, eval=TRUE}
+y_breaks <- seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females", Time == 2000)$Pop), 100000, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females", Time == 2000)$Pop), 100000, f = ceiling),
+  50000)
+#in this the max value is taken for population and the scale is spun across it
+
+y_labels <- abs(seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females", Time == 2000)$Pop)/1000, 100, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females", Time == 2000)$Pop)/1000, 100, f = ceiling),
+  50))
+#given that we are dealing with large numbers, the labels will be shown in thousands.
+
+```
+
+The [rounding](https://stackoverflow.com/questions/6461209/how-to-round-up-to-the-nearest-10-or-100-or-x) and [seq](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/seq) functions for the breaks and labels were referenced.
+
+The resulting graph is:
+
+```{r, eval=TRUE,echo=FALSE}
+plot <- data_grouped %>% ggplot(aes(x=AG, y = Pop, fill = Sex)) +
+  geom_col(data = data_grouped %>% filter(Sex=="Females", Time == 2000),
+           fill = "pink") + 
+  geom_col(data = data_grouped %>% filter(Sex=="Males", Time == 2000), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  scale_y_continuous(name = "Population (in 000's)", 
+                     breaks = y_breaks,
+                     labels = y_labels) +
+  labs(title = "Age Sex Pyramid Singapore", x = "Age Group") +
+  coord_flip() + 
+  theme_light() +
+  theme(plot.title = element_text(hjust=0.5))
+
+plot
+```
+
+On error in the graph immediately catches the eye. The age group 5_to_9 is in the middle of the graph instead of the bottom. This is because R reads the names as text instead of numbers. An easy remedy for this is to add to a 0 in front of the 5. However, to keep format, we will aslo be adding 0s in front of 0, 4, and 9.
+
+```{r, eval=TRUE, echo=TRUE}
+data[data$AG=="5_to_9", ]$AG <- "05_to_09"
+data[data$AG=="0_to_4", ]$AG <- "00_to_04"
+```
+
+More than this, we will use the plotly library to enable basic interactivity in our graph. In order to do this we will use the ggplotly function. Therefore, our final simple graph looks like this:
+
+```{r, eval=TRUE, echo=FALSE}
+#reinitalisation to include changes in data
+data_graph <- data %>% select(c("AG","Sex","Pop", "Time"))
+data_grouped <- data_graph %>%
+  group_by(AG, Sex, Time) %>% 
+  dplyr::summarise(Pop = sum(Pop))
+
+y_breaks <- seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females", Time == 2000)$Pop), 100000, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females", Time == 2000)$Pop), 100000, f = ceiling),
+  50000)
+y_labels <- abs(seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females", Time == 2000)$Pop)/1000, 100, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females", Time == 2000)$Pop)/1000, 100, f = ceiling),
+  50))
+
+#graph
+plot <- data_grouped %>% ggplot(aes(x=AG, y = Pop, fill = Sex)) +
+  geom_col(data = data_grouped %>% filter(Sex=="Females", Time == 2000),
+           fill = "pink") + 
+  geom_col(data = data_grouped %>% filter(Sex=="Males", Time == 2000), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  scale_y_continuous(name = "Population (in 000's)", 
+                     breaks = y_breaks,
+                     labels = y_labels) +
+  labs(title = "Age Sex Pyramid Singapore", x = "Age Group") +
+  coord_flip() + 
+  theme_light() +
+  theme(plot.title = element_text(hjust=0.5))
+
+ggplotly(plot)
+```
+
+An alternative way to make the graph interactive using ggiraph would be:
+
+```{r, echo=TRUE, eval=TRUE}
+y_labels <- abs(seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females", Time == 2000)$Pop)/1000, 100, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females", Time == 2000)$Pop)/1000, 100, f = ceiling),
+  50))
+y_breaks <- seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females", Time == 2000)$Pop), 100000, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females", Time == 2000)$Pop), 100000, f = ceiling),
+  50000)
+
+data_grouped$tooltip <- c(paste0("Age: ", data_grouped$AG, 
+                                 "\n Population: ", format(data_grouped$Pop, big.mark=","), 
+                                 "\n Gender: ", data_grouped$Sex))
+
+plot <- data_grouped %>% ggplot(aes(x=AG, y = Pop, fill = Sex)) +
+  geom_col_interactive(data = data_grouped %>% filter(Sex=="Females", Time == 2000),
+           fill = "pink", aes(tooltip=tooltip)) + 
+  geom_col_interactive(data = data_grouped %>% filter(Sex=="Males", Time == 2000), 
+           aes(y=Pop*(-1), tooltip=tooltip), fill = "navy") + 
+  scale_y_continuous(name = "Population (in 000's)", 
+                     breaks = y_breaks,
+                     labels = y_labels) +
+  labs(title = "Age Sex Pyramid Singapore", x = "Age Group") +
+  coord_flip() + 
+  theme_light() +
+  theme(plot.title = element_text(hjust=0.5))
+
+
+
+girafe(ggobj = plot,
+       width_svg = 6,
+       height_svg = 6*0.70)
+```
+
+# Graph for Each Year
+
+Next, we want to expand our graph to be able to show the data for each year. We can do this either using plotly or gganimate.
+
+## Data Preparation
+
+For the general data prep, we change the breaks and labels for the y-axis. We remove the `Time == 2000` filter to make sure our scale is large enough to support the highest overall value any year has.
+
+```{r, eval=TRUE, echo=TRUE}
+y_labels <- abs(seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females")$Pop)/1000, 100, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females")$Pop)/1000, 100, f = ceiling),
+  50))
+
+y_breaks <- seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females")$Pop), 100000, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females")$Pop), 100000, f = ceiling),
+  50000)
+```
+
+## gganimate Graph
+
+Next, we redo the plot using gganimate. In order to do this we add the `transition_time` function to set Years as the framing variable and the `ease_aes` function to determine the aesthetics of the animation.
+
+We add a subtitle to `labs` that will show which year we are in at the moment.
+
+Lastly, we use `animate` to set the [duration](https://stackoverflow.com/questions/52899017/slow-down-gganimate-in-r) of the animation and make sure it is not too fast or too slow.
+
+```{r, echo=TRUE, eval=TRUE}
+plot <- data_grouped %>% ggplot(aes(x=AG, y = Pop, fill = Sex)) +
+  geom_col(data = data_grouped %>% filter(Sex=="Females"),
+           fill = "pink") + 
+  geom_col(data = data_grouped %>% filter(Sex=="Males"), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  scale_y_continuous(name = "Population (in 000's)", 
+                     breaks = y_breaks,
+                     labels = y_labels) +
+  labs(title = "Age Sex Pyramid Singapore",
+       subtitle = "Year: {frame_time}",
+       x = "Age Group") +
+  coord_flip() + 
+  theme_light() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  transition_time(Time) +
+  ease_aes('linear', interval = 0.1)
+
+
+animate(plot, 
+        duration = 20)
+```
+
+However, the animation looks a little shaky. Let's see if this is better when we use plotly.
+
+## plotly Graph
+
+Given that we are trying to achieve the same result but with a different library, we do NOT need to change the breaks and labels for the y-axis in this case.
+
+For plotly, we use the same graph we used for gganimate with the exception of the gganimate functions.
+
+Instead, we add a frame and id to the original ggplot graph (Reference [1](https://community.plotly.com/t/issue-adding-colour-aesthetic-with-ggplotly-when-added-all-points-appear-on-all-frames/40613) and [2](https://github.com/plotly/plotly.R/issues/1544) for this step).
+
+More than that, when we initialise the graph with ggplotly we add [animation options](https://plotly.com/r/animations/) to make our graph clearer.
+
+```{r, eval=TRUE, echo=TRUE}
+plot <- data_grouped %>% ggplot(aes(x=AG, y = Pop, fill = Sex, frame = Time, ids = AG)) +
+  geom_col(position = "identity", data = data_grouped %>% filter(Sex=="Females"),
+           fill = "pink") + 
+  geom_col(position = "identity", data = data_grouped %>% filter(Sex=="Males"), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  scale_y_continuous(name = "Population (in 000's)", 
+                     breaks = y_breaks,
+                     labels = y_labels) +
+  labs(title = "Age Sex Pyramid Singapore",
+       x = "Age Group") +
+  coord_flip() + 
+  theme_light() +
+  theme(plot.title = element_text(hjust=0.5))
+
+ggplotly(plot) %>% animation_opts(
+  1000, easing = "elastic", redraw = TRUE
+)
+```
+
+Now that we have our year options in place, we just need to add the planning area variable to the mix and we will have our final graphs.
+
+# Graph by Year for Top 5 Planning Areas in Singapore
+
+Singapore has a lot of Planning Areas. When visualising data, it is vital to distinguish between data that needs to be shown and data that does not. Therefore, visualising all 57 Planning Areas would be too much. Instead, there should be a metric to rank the Planning Areas by importance. 
+
+## Data Exploration and Preparation
+
+```{r, eval=TRUE, echo=FALSE}
+unique(data$PA)
+```
+
+As we can see above, each Planning Area has its own name. One metric, by which we could rank them, is population
+
+```{r, eval=TRUE, echo=FALSE, results='hide'}
+big_PA <- data[,c("PA","Pop")]
+big_PA_grouped <- big_PA %>%
+  group_by(PA) %>% 
+  dplyr::summarise(Pop = sum(Pop))
+```
+
+```{r, eval=TRUE, echo=FALSE}
+arrange(big_PA_grouped, by = desc(Pop))[1:5,]
+```
+
+Here we can see the 5 Planning Areas with the largest population and their actual population numbers. Let us use the data preparation steps from above to create an identical data frame which only has the data for these 5 Planning Areas.
+
+```{r, eval=TRUE, echo=TRUE}
+#filtering the data for the PAs
+top5_PA <- data %>% filter(PA=="Bedok"|PA=="Tampines"|
+                             PA=="Jurong West" | PA=="Woodlands"|
+                             PA=="Hougang")
+
+#extracting only the necessary variables and grouping the resultant data frame
+top5_PA_graph <- top5_PA[,c("AG","Sex","Pop", "Time", "PA")]
+
+top5_PA_grouped <- top5_PA_graph %>%
+  group_by(AG, Sex, Time, PA) %>% 
+  dplyr::summarise(Pop = sum(Pop))
+
+#assigning labels and breaks to the population axis
+y_labels <- abs(seq(-(round_any(max(
+  filter(top5_PA_grouped, Sex=="Females")$Pop)/100, 100, f = ceiling)),
+  round_any(max(
+    filter(top5_PA_grouped, Sex=="Females")$Pop)/100, 100, f = ceiling),
+  50))
+y_breaks <- seq(-(round_any(max(
+  filter(top5_PA_grouped, Sex=="Females")$Pop), 10000, f = ceiling)),
+  round_any(max(
+    filter(top5_PA_grouped, Sex=="Females")$Pop), 10000, f = ceiling),
+  5000)
+```
+
+## Graph for each Planning Area
+
+```{r, eval=TRUE, echo=TRUE}
+#plotting the Age Sex Pyramid for each PA separately
+top5_PA_plot <- top5_PA_grouped %>% ggplot(aes(x=AG, 
+                                       y = Pop, 
+                                       fill = Sex, 
+                                       frame = Time, 
+                                       ids = AG)) +
+  geom_col(position = "identity", 
+           data = top5_PA_grouped %>% filter(Sex=="Females"),
+           fill = "pink") + 
+  geom_col(position = "identity",
+           data = top5_PA_grouped %>% filter(Sex=="Males"), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  scale_y_continuous(name = "Population (in 00's)", 
+                     breaks = y_breaks,
+                     labels = y_labels) +
+  labs(title = "Age Sex Pyramid Singapore",
+       x = "Age Group") +
+  coord_flip() + 
+  theme_light() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  facet_wrap(~PA)
+
+ggplotly(top5_PA_plot) %>% animation_opts(
+  1000, easing = "elastic", redraw = TRUE
+)
+```
+
+As we can see above, each Planning Area has its own Age Sex Pyramid shape. 
+
+
+## Interactive Graph for the Planning Areas
+
+However, the graph we just created is not very clear and pretty hard to read. Wouldn't it be nice to see each one of these graphs in full size, but without using up the space we would need for 5 full sized plots?
+
+First, let us reinitialise the data. However, when choosing variables we will include Planning Areas this time.
+
+```{r,eval=TRUE,echo=TRUE}
+data_graph <- data[,c("AG","Sex","Pop", "Time", "PA")]
+
+data_grouped <- data_graph %>%
+  group_by(AG, Sex, Time, PA) %>% 
+  dplyr::summarise(Pop = sum(Pop))
+
+y_labels <- abs(seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females")$Pop)/100, 100, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females")$Pop)/100, 100, f = ceiling),
+  50))
+y_breaks <- seq(-(round_any(max(
+  filter(data_grouped, Sex=="Females")$Pop), 10000, f = ceiling)),
+  round_any(max(
+    filter(data_grouped, Sex=="Females")$Pop), 10000, f = ceiling),
+  5000)
+```
+
+Next, we will create plots for all of the different planning areas in one graph. This means adding 10 plots (5 Planning Ares x 2 Genders) to the ggplot.
+
+```{r, eval=TRUE, echo=TRUE}
+plot <- data_grouped %>% 
+  ggplot(aes(x=AG, y = Pop, fill = Sex, frame = Time)) +
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Females", PA == "Bedok"),
+           fill = "pink") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Males", PA == "Bedok"), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Females", PA == "Tampines"),
+           fill = "pink") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Males", PA == "Tampines"), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Females", PA == "Jurong West"),
+           fill = "pink") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Males", PA == "Jurong West"), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Females", PA == "Woodlands"),
+           fill = "pink") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Males", PA == "Woodlands"), 
+           aes(y=Pop*(-1)), fill = "navy") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Females", PA == "Hougang"),
+           fill = "pink") + 
+  geom_col(position = "identity",
+           data = data_grouped %>% filter(Sex=="Males", PA == "Hougang"), 
+           aes(y=Pop*(-1)), fill = "navy") +
+  scale_y_continuous(name = "Population (in 00's)", 
+                     breaks = y_breaks,
+                     labels = y_labels) +
+  labs(title = "Age Sex Pyramid Singapore", x = "Age Group") +
+  coord_flip() + 
+  theme_light() +
+  theme(plot.title = element_text(hjust=0.5))
+
+plot
+```
+  
+As we can see, this plot just gives us a pyramid with values that we cannot place and no option of seeing for which Planning Area the pyramid is.
+
+To alleviate this problem we can introduce a drop down menu to choose the Planning Area. We will use the `updatemenus` argument from the `layout` function in the `plotly` library.
+
+We will create so-called buttons. In each of the buttons we will choose which of the 8 plots above will be visible when clicking it. For example, for the Bedok button we will only activate plots 1 and 2 from our graph. These are the female and male graphs filtered for Bedok.
+
+```{r, eval=TRUE, echo=TRUE}
+updatemenus <- list(
+  list(
+    active = 0,
+    buttons = list(
+      list(
+        label = "Bedok",
+        method = "update",
+        args = list(list(visible = c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE,
+                                     FALSE, FALSE, FALSE, FALSE)),
+                    list(title = "Age Sex Pyramid Bedok"))),
+      list(
+        label = "Tampines",
+        method = "update",
+        args = list(list(visible = c(FALSE, FALSE, TRUE, TRUE, FALSE, FALSE,
+                                     FALSE, FALSE, FALSE, FALSE)),
+                    list(title = "Age Sex Pyramid Tampines"))),
+      list(
+        label = "Jurong West",
+        method = "update",
+        args = list(list(visible = c(FALSE, FALSE, FALSE, FALSE, TRUE, TRUE,
+                                     FALSE, FALSE, FALSE, FALSE)),
+                    list(title = "Age Sex Pyramid Jurong West"))),
+      list(
+        label = "Woodlands",
+        method = "update",
+        args = list(list(visible = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+                                     TRUE, TRUE, FALSE, FALSE)),
+                    list(title = "Age Sex Pyramid Woodlands"))),
+      list(
+        label = "Hougang",
+        method = "update",
+        args = list(list(visible = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+                                     FALSE, FALSE, TRUE, TRUE)),
+                    list(title = "Age Sex Pyramid Hougang")))
+  )
+))
+```
+
+Now, we are one step away from our final graph. After graphing out our drop down menu ([reference](https://stackoverflow.com/questions/40024029/plotly-updating-data-with-dropdown-selection)), we will also include the plotly year animation that has been discussed earlier. 
+
+Moreover, we will add a custom tooltip to the graph.
+
+```{r, eval=TRUE, echo=TRUE}
+ggplotly(plot) %>% 
+  animation_opts(1000, 
+                 easing = "elastic", 
+                 redraw = TRUE) %>%
+  layout(showlegend=FALSE,
+         updatemenus=updatemenus)
+```
+
+Thank you for taking the time to read through my second Take Home Exercise. I hope you enjoyed my visualisations.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Distill is a publication format for scientific and technical writing, native to the web. 
+
+Learn more about using Distill for R Markdown at <https://rstudio.github.io/distill>.
+
+
+
+
+

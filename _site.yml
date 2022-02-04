@@ -20,4 +20,6 @@ navbar:
       menu:
       - text: "Exercise 1"
         href: "TakeHomeEx/1/THEx1.html"
+      - text: "Exercise 2"
+        href: "TakeHomeEx/2/THEx2.html"
 output: distill::distill_article

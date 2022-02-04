@@ -22,7 +22,6 @@ for(p in packages){
 
 exam_data <- read_csv("data/Exam_data.csv")
 
-
 p <- ggplot(data=exam_data, aes(x = MATHS)) +
   geom_dotplot_interactive(aes(tooltip = ID,
                                data_id = CLASS),
