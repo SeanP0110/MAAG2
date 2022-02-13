@@ -1,0 +1,80 @@
+---
+title: "In-Class Excercise 5 Heatmap"
+description: |
+  Today's In-Class Exercise Part 2.
+author:
+  - name: Sean Samuel Prajs
+    url: https://github.com/SeanP0110
+    affiliation: SMU
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+Let us build heatmaps!
+
+
+
+```{r, echo=TRUE, eval=TRUE}
+packages = c('seriation', 'dendextend', 'heatmaply', 'tidyverse')
+
+for(p in packages){library
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+
+wh <- read_csv("data/WHData-2018.csv")
+```
+
+## Data Prep
+
+```{r, echo=TRUE, eval=TRUE}
+row.names(wh) <- wh$Country
+
+wh1 <- dplyr::select(wh, c(3, 7:12))
+wh_matrix <- data.matrix(wh)
+```
+
+## static heatmap
+
+```{r, echo=TRUE, eval=TRUE}
+wh_heatmap <- heatmap(wh_matrix,
+                      Rowv=NA, Colv=NA)
+```
+
+## interactive heatmap with heatmaply (plotly extension)
+
+```{r, echo=TRUE, eval=TRUE}
+heatmaply(mtcars)
+```
+Now let us look at normalisation and clean up the heatmap.
+
+```{r, echo=TRUE, eval=TRUE}
+heatmaply(normalize(wh_matrix[, -c(1, 2, 4, 5)]),
+          Colv=NA,
+          seriate = "none",
+          colors = Blues,
+          k_row = 5,
+          margins = c(NA,200,60,NA),
+          fontsize_row = 4,
+          fontsize_col = 5,
+          main="World Happiness Score and Variables by Country, 2018 \nDataTransformation using Normalise Method",
+          xlab = "World Happiness Indicators",
+          ylab = "World Countries"
+          )
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+Distill is a publication format for scientific and technical writing, native to the web. 
+
+Learn more about using Distill for R Markdown at <https://rstudio.github.io/distill>.
+
+
+
+
+

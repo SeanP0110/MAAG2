@@ -1,0 +1,155 @@
+---
+title: "In-Class Excercise 5 Wine"
+description: |
+  Today's In-Class Exercise Part 1.
+author:
+  - name: Sean Samuel Prajs
+    url: https://github.com/SeanP0110
+    affiliation: SMU
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+
+# Part 1, Correlation
+
+Two r libraries can be used to efficiently display correlation matrices.
+
+1. ggstatsplot
+2. corrplot
+
+Today, we will look into both packages. 
+
+```{r, eval=TRUE, echo=FALSE, message=FALSE}
+packages = c('ggstatsplot', 'corrplot', 'tidyverse',
+             'ggcorrplot')
+
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+
+wine <- read.csv("data/wine_quality.csv")
+```
+
+## ggstatsplot
+
+Let us look at the data using corrplot
+
+```{r, echo=FALSE, eval=TRUE,fig.height=7, fig.width=7}
+View(wine)
+pairs(wine[,1:11])
+```
+
+Another view:
+
+```{r, eval=TRUE, echo=TRUE, fig.height=7, fig.width=7}
+panel.cor <- function(x, y, digits=2, prefix="", cex.cor, ...) {
+usr <- par("usr")
+on.exit(par(usr))
+par(usr = c(0, 1, 0, 1))
+r <- abs(cor(x, y, use="complete.obs"))
+txt <- format(c(r, 0.123456789), digits=digits)[1]
+txt <- paste(prefix, txt, sep="")
+if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+text(0.5, 0.5, txt, cex = cex.cor * (1 + r) / 2)
+}
+
+pairs(wine[,2:12], 
+      upper.panel = panel.cor)
+```
+
+Now, let us see a different way to visualise the correlations.
+
+```{r, echo=TRUE, eval=TRUE, fig.height=7, fig.width=7}
+ggstatsplot::ggcorrmat(
+  data = wine, 
+  cor.vars = 1:11,
+  ggcorrplot.args = list(outline.color = "black", 
+                         hc.order = TRUE,
+                         tl.cex = 10),
+  title    = "Correlogram for wine dataset",
+  subtitle = "Four pairs are no significant at p < 0.05"
+)
+```
+
+Alternatively, we can change some of the important parameters and transform the plot into the following:
+
+```{r, eval=TRUE, echo=TRUE, fig.height=7, fig.width=7}
+ggstatsplot::ggcorrmat(
+  data = wine,
+  cor.vars = 1:11,
+  type = "robust",
+  p.adjust.method = "holm",
+  ggcorrplot.args = list(outline.color = "black", 
+                         hc.order = TRUE,
+                         tl.cex = 10),
+  annotation.args = list(
+    tag_levels = "a",
+    title = "Correlogram for wine dataset",
+    subtitle = "The measures are: alcohol, sulphates, fixed acidity, citric acid, chlorides, residual sugar, density, free sulfur dioxide and volatile acidity",
+    caption = "Dataset: UCI Machine Learning Repository"
+  )
+)
+```
+
+Now let us split it into red and white wine:
+
+```{r, eval=TRUE, echo=TRUE, fig.height=7, fig.width=7}
+grouped_ggcorrmat(
+  data = wine,
+  cor.vars = 1:11,
+  grouping.var = type,
+  type = "robust",
+  p.adjust.method = "holm",
+  plotgrid.args = list(ncol = 2),
+  ggcorrplot.args = list(outline.color = "black", 
+                         hc.order = TRUE,
+                         tl.cex = 10),
+  annotation.args = list(
+    tag_levels = "a",
+    title = "Correlogram for wine dataset",
+    subtitle = "The measures are: alcohol, sulphates, fixed acidity, citric acid, chlorides, residual sugar, density, free sulfur dioxide and volatile acidity",
+    caption = "Dataset: UCI Machine Learning Repository"
+  )
+)
+```
+
+The annotations above are added to the plot using pathwork.
+
+
+## corplott
+
+```{r, eval=TRUE, echo=TRUE, fig.height=7, fig.width=7}
+wine.cor <- cor(wine[, 1:11])
+
+corrplot(wine.cor, 
+         method = "ellipse")
+```
+
+Now a version with more features:
+
+```{r, eval=TRUE, echo=TRUE, fig.height=7, fig.width=7}
+corrplot(wine.cor, 
+         method = "ellipse", 
+         tl.pos = "lt",
+         tl.col = "black",
+         order="hclust",
+         hclust.method = "ward.D",
+         addrect = 3)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Distill is a publication format for scientific and technical writing, native to the web. 
+
+Learn more about using Distill for R Markdown at <https://rstudio.github.io/distill>.
+
+
+
+
+

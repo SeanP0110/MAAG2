@@ -1,0 +1,162 @@
+---
+title: "In Class Exercise 4"
+description: |
+  A new article created using the Distill format.
+author:
+  - name: Sean Samuel Prajs 
+    url: https://github.com/SeanP0110
+    affiliation: SMU
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+
+# ggstatsplot
+
+```{r, eval=TRUE, echo=TRUE}
+packages = c('ggstatsplot', 'ggside', 'tidyverse')
+#install.packages('PMCMRplus') #for pairwise comparison
+#install devtools
+
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+
+#ggside: used to create side by side plots like 
+#scatterplot with side boxplot
+
+exam <- read.csv("data/Exam_data.csv")
+
+
+#One-sample test
+set.seed(1234)
+
+gghistostats(
+  data = exam,
+  x = ENGLISH,
+  type = "bayes",
+  test.value = 60,
+  xlab ="English scores"
+)
+
+
+#two-sample mean test
+ggbetweenstats(
+  data = exam,
+  x = GENDER,
+  y = MATHS,
+  type = "np",
+  messages = FALSE
+)
+
+ggbetweenstats(
+  data = exam,
+  x = RACE,
+  y = ENGLISH,
+  type ="p",
+  mean.ci =TRUE,
+  pairwise.comparisons =TRUE,
+  pairwise.display ="s",
+  p.adjust.method ="fdr",
+  messages = FALSE
+)
+
+ggscatterstats(
+  data = exam,
+  x = MATHS,
+  y = ENGLISH,
+  marginal = TRUE,
+)
+
+
+exam1 <- exam %>%
+  mutate(MATHS_bins =
+           cut(MATHS,
+               breaks = c(0,60,75,85,100))
+  )
+
+ggbarstats(exam1,
+           x = MATHS_bins,
+           y = GENDER)
+```
+
+# Toyota Case Study
+
+## package loading
+
+```{r, eval=TRUE, echo=TRUE}
+packages = c('readxl','report','performance','parameters','see')
+
+for(p in packages){
+  if(!require(p,character.only=T)){
+    install.packages(p)
+  }
+  library(p, character.only =T)
+  }
+```
+
+## data loading and preparation
+
+```{r, eval=TRUE,echo=TRUE}
+car_resale <- read_xls("data/ToyotaCorolla.xls","data")
+
+model <- lm(Price ~ Age_08_04 + Mfg_Year + KM +
+              Weight + Guarantee_Period, data = car_resale)
+model
+```
+
+## Model Diagnostic
+
+### Checking for multicollinearity
+
+```{r, eval=TRUE, echo=TRUE}
+check_collinearity(model) #from performance library
+
+check_c <- check_collinearity(model)
+plot(check_c) #this is from the see library
+```
+
+### checking the normality assumption
+
+```{r, eval=TRUE, echo=TRUE}
+check_n <- check_normality(model)
+plot(check_n)
+```
+
+### checking the homogeneity
+
+```{r, eval=TRUE, echo=TRUE}
+check_h <- check_heteroscedasticity(model)
+plot(check_h)
+```
+
+### complete check
+
+```{r, eval=TRUE, echo=TRUE}
+check_model(model)
+```
+
+## Visual Regression Paramaters:
+
+```{r, eval=TRUE, echo=TRUE}
+plot(parameters(model))
+
+ggcoefstats(model, output = "plot")
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Distill is a publication format for scientific and technical writing, native to the web. 
+
+Learn more about using Distill for R Markdown at <https://rstudio.github.io/distill>.
+
+
+
+
+

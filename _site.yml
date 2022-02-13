@@ -13,13 +13,23 @@ navbar:
     - text: "DataViz Makeovers"
       menu:
       - text: "DataViz Makeover 1"
-        href: "DataViz1"
+        href: "DataVizMakeover/1/DataVizMakeover1_SeanSamuelPrajs.html"
       - text: "DataViz Makeover 2"
         href: "DataViz2"
-    - text: "Take-Home Exercise"
+    - text: "Take-Home Exercises"
       menu:
       - text: "Exercise 1"
         href: "TakeHomeEx/1/THEx1.html"
       - text: "Exercise 2"
         href: "TakeHomeEx/2/THEx2.html"
+    - text: "In-Class Exercises"
+      menu:
+      - text: "Exercise 4"
+        href: "InClassEx/4/In-class-exercise-4-Toyota.html"
+      - text: "5.1 Wine Correlation"
+        href: "InClassEx/5/In-class-exercise-5-wine.html"
+      - text: "5.2 Country Happiness Heatmap"
+        href: "InClassEx/5/In-class-exercise-5-Heatmap.html"
+      - text: "5.3 Parallel Coordinate Plot"
+        href: "InClassEx/5/In-class-exercise-5-Parallel-Coordinate-Plot.html"
 output: distill::distill_article
