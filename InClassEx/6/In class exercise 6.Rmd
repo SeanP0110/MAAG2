@@ -6,7 +6,7 @@ author:
   - name: Sean Samuel Prajs
     url: https://github.com/SeanP0110
     affiliation: SMU
-date: "`r Sys.Date()`"
+date: "2022/02/19"
 output: distill::distill_article
 ---
 
