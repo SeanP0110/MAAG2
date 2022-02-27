@@ -24,6 +24,8 @@ navbar:
         href: "TakeHomeEx/2/THEx2.html"
       - text: "Exercise 3"
         href: "TakeHomeEx/3/THEx3.html"
+      - text: "Exercise 4"
+        href: "TakeHomeEx/4/THEx4.html"
     - text: "In-Class Exercises"
       menu:
       - text: "Exercise 4"

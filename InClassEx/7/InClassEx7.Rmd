@@ -1,0 +1,81 @@
+---
+title: "In-Class Exercise 7"
+description: |
+  GeoSpatial Data in R.
+author:
+  - name: Sean Samuel Prajs
+    url: https://github.com/SeanP0110
+    affiliation: SMU
+date: "2022/02/26"
+output: 
+  distill::distill_article:
+    toc: true
+    toc_depth: 2
+    code_folding: true
+---
+
+```{r}
+packages = c('tidyverse', 'sf', 'tmap')
+
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+}
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```e
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Distill is a publication format for scientific and technical writing, native to the web. 
+
+Learn more about using Distill for R Markdown at <https://rstudio.github.io/distill>.
+
+
+
+
+
