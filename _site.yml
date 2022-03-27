@@ -15,7 +15,7 @@ navbar:
       - text: "DataViz Makeover 1"
         href: "DataVizMakeover/1/DataVizMakeover1_SeanSamuelPrajs.html"
       - text: "DataViz Makeover 2"
-        href: "DataViz2"
+        href: "DataVizMakeover/2/DataVizMakeover2_SeanSamuelPrajs.html"
     - text: "Take-Home Exercises"
       menu:
       - text: "Exercise 1"
